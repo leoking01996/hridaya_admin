@@ -1,0 +1,97 @@
+/* Make html, body, and root fill the full screen */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f0f2f5;
+  text-align: center;
+}
+
+/* Root container */
+#root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem;
+  box-sizing: border-box; /* includes padding in width/height */
+}
+
+/* Logo styles */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+/* Spin animation */
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* Card styling */
+.card {
+  padding: 2em;
+  width: 100%;
+  max-width: 800px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+/* Text links */
+.read-the-docs {
+  color: #888;
+  text-decoration: none;
+}
+
+/* Buttons (example) */
+button {
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  border: 1px solid #28a745;
+  background-color: white;
+  color: #28a745;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #28a745;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  #root {
+    padding: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}
