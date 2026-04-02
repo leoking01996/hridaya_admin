@@ -8,7 +8,19 @@ interface Admin {
   email: string;
   role: string;
 }
-
+interface Merchant{
+id:number;
+full_name:string;
+email:string;
+phone:string;
+national_id_number:string;
+national_id_image:string;
+  status: "pending" | "approved" | "rejected";
+}
+type CurrentUser = {
+  id: number;
+  role: "admin" | "super-admin" | "editor" | "merchant";
+};
 interface Variant {
   variant_name: string;
   long_description: string;
@@ -58,7 +70,17 @@ const AdminDashboard: React.FC<DashboardProps> = ({ admin, onLogout }) => {
 const [productLists, setProducts] = useState<ProductList[]>([]);
   const [showAddAdmin, setShowAddAdmin] = useState(false);
   const [showAddMerchant, setShowAddMrerchant] = useState(false);
+  const [showEditMerchant, setShowEditMrerchant] = useState(false);
 const [productTypeList, setProductTypeList] = useState<ProductType[]>([]);
+const [merchants,setMerchants] = useState<Merchant[]>([]);
+const [newMerchant,setNewMerchant] = useState({
+full_name:"",
+email:"",
+password:"",
+phone:"",
+national_id_number:"",
+national_id_image:null as File | null
+});
   const [activeTabs, setActiveTabs] = useState<"product"|"type"|"">("");
   const [newAdmin, setNewAdmin] = useState({
     full_name: "",
@@ -115,7 +137,6 @@ const  [productNameType,setProductNameType]=useState<ProductType>({
     }
   };
 const handleTabChange = (tab: "admin" | "product" | "profile"|"merchant") => {
-  alert(tab)
   if(tab==='merchant'){
     setShowAddMrerchant(true);
   }
@@ -123,6 +144,8 @@ const handleTabChange = (tab: "admin" | "product" | "profile"|"merchant") => {
   localStorage.setItem("activeTab", tab);
 };
 useEffect(() => {
+    console.log('adminData45444',adminData)
+
   const fetchAdminsAsync = async () => {
     try {
       const res = await fetch("http://localhost/backend_php_hridaya/hridaya-admin-backend/get_admins.php");
@@ -167,6 +190,8 @@ const fetchProductsTypesAsync = async () => {
   fetchAdminsAsync();
   fetchProductsAsync();
   fetchProductsTypesAsync();
+      fetchMerchants();
+
 }, []);
   // ----- Admin CRUD -----
   const handleAddAdmin = async (e: React.FormEvent) => {
@@ -190,6 +215,58 @@ const fetchProductsTypesAsync = async () => {
       // console.error(err);
     }
   };
+
+const handleAddMerchant = async (e: React.FormEvent) => {
+
+  e.preventDefault()
+
+  const formData = new FormData()
+
+  formData.append("full_name", newMerchant.full_name)
+  formData.append("email", newMerchant.email)
+  formData.append("password", newMerchant.password)
+  formData.append("phone", newMerchant.phone)
+  formData.append("national_id_number", newMerchant.national_id_number)
+
+  if (newMerchant.national_id_image) {
+    formData.append("national_id_image", newMerchant.national_id_image)
+  }
+
+  try {
+
+    const res = await fetch(
+      "http://localhost/backend_php_hridaya/merchant-backend/create_merchant.php",
+      {
+        method: "POST",
+        body: formData
+      }
+    )
+
+    const data = await res.json()
+
+    alert(data.message)
+
+    if (data.success) {
+      setShowAddMrerchant(false)
+
+      setNewMerchant({
+        full_name: "",
+        email: "",
+        password: "",
+        phone: "",
+        national_id_number: "",
+        national_id_image: null
+      })
+
+      fetchMerchants()
+    }
+
+  } catch (err) {
+    console.error(err)
+  }
+
+}
+
   const productTypeEdit = (data:ProductType)=>{
   navigate("/Edit_profileDetail", { state: data });
   }
@@ -212,6 +289,22 @@ const productEdit = (data:ProductList)=>{
   // productverientList();
 setActiveTab('')
 
+}
+const fetchMerchants = async () => {
+  try {
+    const res = await fetch(
+      "http://localhost/backend_php_hridaya/merchant-backend/get_merchants.php"
+    )
+
+    const data = await res.json()
+
+    if (data.success) {
+      setMerchants(data.merchants)
+    }
+
+  } catch (err) {
+    console.error(err)
+  }
 }
 const productDelete= async (id:string)=>{
    try {
@@ -383,10 +476,82 @@ const handleSubmitAddProduct = async (e: React.FormEvent) => {
   alert(data.message);
   setActiveTab('');
 };
+
+const handleDeleteMerchant = async (id:number) => {
+
+if(!confirm("Delete this merchant?")) return;
+
+try{
+
+const res = await fetch(
+"http://localhost/backend_php_hridaya/merchant-backend/delete_merchant.php",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({id})
+}
+);
+
+const data = await res.json();
+
+if(data.success){
+alert("Merchant deleted");
+fetchMerchants();
+}
+
+}catch(err){
+console.log(err);
+}
+
+};
+const editMerchantStatus = (id:number)=>{
+  setShowEditMrerchant(true);
+}
+
+const closeEditMerchantForm=()=>{
+  setShowEditMrerchant(false);
+}
+
+
+
+// Function to handle merchant status change
+const editMerchantStatusChange = (newStatus: string, merchantId: number) => {
+  console.log(`Merchant ID ${merchantId} status changed to: ${newStatus}`);
+
+if(newStatus){
+    // Example: send update to backend
+  fetch("http://localhost/backend_php_hridaya/merchant-backend/update_merchant_status.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: merchantId, status: newStatus }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        alert("Status updated successfully");
+        fetchMerchants(); // refresh table
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to update status:", err);
+      alert("Failed to update status");
+    });
+}
+};
+const handleCancelMerchant=()=>{
+  setShowAddMrerchant(false);
+}
   // ----- Render -----
   return (
     <div className=" min-vh-100 bg-light">
-      <div >
+{adminData?.role=='admin' ||adminData?.role=='super-admin' &&(
+
+<>
+  <div >
         {/* Navbar */}
         <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4 rounded">
           <div className="container-fluid">
@@ -469,62 +634,219 @@ const handleSubmitAddProduct = async (e: React.FormEvent) => {
           </>
         )}
           {/* Merchant Tab */}
-        {activeTab === "merchant" && adminData?.role === "merchant" && (
+        {activeTab === "merchant" && adminData?.role === "super-admin" && (
           <>
             <div className="mb-3 text-center">
-              <button className="btn btn-success" onClick={() => setShowAddAdmin(!showAddAdmin)}>
+              <button className="btn btn-success" onClick={() => setShowAddMrerchant(!showAddAdmin)}>
                 {showAddMerchant ? "Cancel" : "Add Merchant"}
               </button>
             </div>
 
-            {showAddMerchant && (
-              <form onSubmit={handleAddAdmin} className="bg-white p-3 rounded shadow mb-4">
-                <input className="form-control mb-2" placeholder="Full Name" value={newAdmin.full_name} onChange={e => setNewAdmin({ ...newAdmin, full_name: e.target.value })} required />
-                <input className="form-control mb-2" placeholder="Email" value={newAdmin.email} onChange={e => setNewAdmin({ ...newAdmin, email: e.target.value })} required />
-                <input className="form-control mb-2" placeholder="Password" type="password" value={newAdmin.password} onChange={e => setNewAdmin({ ...newAdmin, password: e.target.value })} required />
-                <select className="form-select mb-2" value={newAdmin.role} onChange={e => setNewAdmin({ ...newAdmin, role: e.target.value })}>
-                  <option value="admin">Admin</option>
-                  <option value="super-admin">Super Admin</option>
-               
-                </select>
-                <div className="text-center">
-                  <button className="btn btn-primary">Add Admin</button>
-                </div>
-              </form>
-            )}
+{showAddMerchant&&(
+  <>
+          <form onSubmit={handleAddMerchant} className="bg-white p-3 rounded shadow">
 
-            {/* Admin List */}
-            <div className="table-responsive bg-white rounded shadow">
-              <h5 className="text-center mt-4">Admin List</h5>
-              <table className="table table-bordered mb-0 text-center">
-                <thead className="table-light">
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.map(a => (
-                    <tr key={a.id}>
-                      <td>{a.id}</td>
-                      <td>{a.full_name}</td>
-                      <td>{a.email}</td>
-                      <td>{a.role}</td>
-                      <td>
-                        {a.id !== admin.id && (
-                          <div>
-                            <button className="btn btn-danger btn-sm m-1" onClick={() => handleDelete(a.id)}>Delete</button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+<input
+className="form-control mb-2"
+placeholder="Full Name"
+value={newMerchant.full_name}
+onChange={(e)=>setNewMerchant({...newMerchant,full_name:e.target.value})}
+/>
+
+<input
+className="form-control mb-2"
+placeholder="Email"
+value={newMerchant.email}
+onChange={(e)=>setNewMerchant({...newMerchant,email:e.target.value})}
+/>
+
+<input
+type="password"
+className="form-control mb-2"
+placeholder="Password"
+value={newMerchant.password}
+onChange={(e)=>setNewMerchant({...newMerchant,password:e.target.value})}
+/>
+
+<input
+className="form-control mb-2"
+placeholder="Phone"
+value={newMerchant.phone}
+onChange={(e)=>setNewMerchant({...newMerchant,phone:e.target.value})}
+/>
+
+<input
+className="form-control mb-2"
+placeholder="National ID Number"
+value={newMerchant.national_id_number}
+onChange={(e)=>setNewMerchant({...newMerchant,national_id_number:e.target.value})}
+/>
+
+<input
+type="file"
+className="form-control mb-2"
+onChange={(e)=>{
+if(e.target.files){
+setNewMerchant({...newMerchant,national_id_image:e.target.files[0]})
+}
+}}
+/>
+
+<button onClick={handleAddMerchant} className="btn  btn-primary m-1">Add Merchant</button>
+<button onClick={handleCancelMerchant} className="btn  btn-primary m-1">Cancle</button>
+
+</form>
+  </>
+)}
+            {/* Merchant List */}
+            {!showEditMerchant&&(
+ <div className="table-responsive bg-white rounded shadow">
+              <h5 className="text-center mt-4">Merchant List</h5>
+  <table className="table table-bordered text-center">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Phone</th>
+<th>National ID</th>
+<th>ID Image</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+{merchants.map((m) => (
+<tr key={m.id}>
+
+<td>{m.id}</td>
+<td>{m.full_name}</td>
+<td>{m.email}</td>
+<td>{m.phone}</td>
+<td>{m.national_id_number}</td>
+
+<td>
+<img
+src={`http://localhost/backend_php_hridaya/merchant-backend/uploads/${m.national_id_image}`}
+width="80"
+/>
+</td>
+
+<td>
+
+<button onClick={()=>editMerchantStatus(m.id)}
+className="btn btn-warning btn-sm me-2"
+
+>
+Edit
+</button>
+
+<button
+className="btn btn-danger btn-sm"
+onClick={() => handleDeleteMerchant(m.id)}
+>
+Delete
+</button>
+
+</td>
+
+</tr>
+))}
+
+</tbody>
+</table>
             </div>
+            )}
+           {showEditMerchant &&(
+<>
+<div className="mt-5">
+      <h5 className="text-center mt-4">Edit Merchant List</h5>
+  <table className="table table-hover align-middle text-center shadow-sm rounded">
+  <thead className="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>Full Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>National ID</th>
+      <th>ID Image</th>
+      <th>Status / Actions</th>
+      <th
+  
+
+>
+
+<button onClick={closeEditMerchantForm} className="btn  btn-danger m-1 bg-red-500 hover:bg-red-700 text-white font-bold px-4 py-2 cursor-pointer">Close</button>
+
+</th>
+    </tr>
+  </thead>
+  <tbody>
+    {merchants.map((m) => (
+      <tr key={m.id}>
+        <td className="fw-bold">{m.id}</td>
+        <td>{m.full_name}</td>
+        <td>{m.email}</td>
+        <td>{m.phone}</td>
+        <td>{m.national_id_number}</td>
+        <td>
+          <img
+            src={`http://localhost/backend_php_hridaya/merchant-backend/uploads/${m.national_id_image}`}
+            width="60"
+            height="60"
+            className="rounded-circle border shadow-sm"
+            alt="National ID"
+          />
+        </td>
+        <td>
+          {showEditMerchant && ["admin", "super-admin"].includes(adminData?.role || "") ? (
+            <select
+              className={`form-select form-select-sm mb-2 ${
+                m.status === "approved"
+                  ? "bg-success text-white"
+                  : m.status === "rejected"
+                  ? "bg-danger text-white"
+                  : "bg-warning text-dark"
+              }`}
+              value={m.status} // default to "pending"
+   onChange={(e) => editMerchantStatusChange(e.target.value, m.id)}
+            >
+              {/* <option value="pending">Pending</option> */}
+              <option value='' >Select status</option>
+              <option value="approved" >Approved</option>
+              <option value="rejected" >Rejected</option>
+            </select>
+          ) : (
+            <span
+              className={`badge ${
+                m.status === "approved"
+                  ? "bg-success"
+                  : m.status === "rejected"
+                  ? "bg-danger"
+                  : "bg-warning text-dark"
+              }`}
+            >
+              {(m.status || "pending").toUpperCase()}
+            </span>
+          )}
+
+          {/* <button
+            className="btn btn-outline-danger btn-sm ms-2"
+            onClick={() => handleDeleteMerchant(m.id)}
+            title="Delete Merchant"
+          >
+            Remove
+          </button> */}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+</div>
+</>
+           )}
           </>
         )} 
 
@@ -994,6 +1316,18 @@ const handleSubmitAddProduct = async (e: React.FormEvent) => {
           </div>
         )}
       </div>
+</>
+)}
+{adminData?.role=='merchant'&&(
+  <>
+  <div>
+    <h1>
+      merchant welcome
+    </h1>
+  </div>
+  </>
+)}
+    
     </div>
   );
 };
