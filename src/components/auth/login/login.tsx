@@ -54,7 +54,7 @@ if (data.success) {
 <div className="flex items-center  justify-center min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100">
   <div className="w-full max-w-sm  bg-white rounded-2xl shadow-2xl p-8 transform transition-transform hover:scale-105">
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Admin / Merchant Login</h2>
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Admin Login</h2>
 
 <div className="ms-5 text-center ">      <input
         type="email"

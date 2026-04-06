@@ -507,6 +507,7 @@ console.log(err);
 
 };
 const editMerchantStatus = (id:number)=>{
+  alert()
   setShowEditMrerchant(true);
 }
 
@@ -522,7 +523,7 @@ const editMerchantStatusChange = (newStatus: string, merchantId: number) => {
 
 if(newStatus){
     // Example: send update to backend
-  fetch("http://localhost/backend_php_hridaya/merchant-backend/update_merchant_status.php", {
+  fetch("http://localhost/backend_php_hridaya/merchant-backend/update_merchant_status_admin.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: merchantId, status: newStatus }),
@@ -548,7 +549,7 @@ const handleCancelMerchant=()=>{
   // ----- Render -----
   return (
     <div className=" min-vh-100 bg-light">
-{adminData?.role=='admin' ||adminData?.role=='super-admin' &&(
+
 
 <>
   <div >
@@ -1317,18 +1318,7 @@ Delete
         )}
       </div>
 </>
-)}
-{adminData?.role=='merchant'&&(
-  <>
-  <div>
-    <h1>
-      merchant welcome
-    </h1>
-  </div>
-  </>
-)}
-    
-    </div>
+</div>
   );
 };
 
