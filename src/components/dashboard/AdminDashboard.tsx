@@ -926,6 +926,7 @@ Delete
           <option value="eatable">Eatable</option>
           <option value="gel">Gel</option>
           <option value="special">Special</option>
+          <option value="sbdya">Sarita Baidhya</option>
         </select>
       </div>
 
